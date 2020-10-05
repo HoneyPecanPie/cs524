@@ -1,0 +1,156 @@
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/24/20 23:39:36 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1  option limrow = 0, limcol = 0 ;
+   2  option solprint = off;
+   3   
+   4   
+      Around 10563 units of germanium should be melted in method 1 and minimum cost is $641725.352.
+   8  set methods 'methond1 and method2'/m1,m2/;
+   9  set grades /def "defective", g1 "grade1", g2 "grade2", g3 "grade3", g4 "grade 4"/;
+  10  set refire_grades(grades) /def, g1, g2, g3/;
+  11   
+  12  table q(grades,methods) "the qualities of germanium produced by different melting methods"
+  13          m1      m2
+  14  def    0.3     0.2
+  15  g1     0.3     0.2
+  16  g2     0.2    0.25
+  17  g3    0.15     0.2
+  18  g4    0.05    0.15;
+  19   
+  20  table refire(grades,refire_grades)
+  21          def     g1      g2      g3
+  22  def     0.3      0       0       0
+  23  g1     0.25    0.3       0       0
+  24  g2     0.15    0.3     0.4       0
+  25  g3      0.2    0.2     0.3     0.5
+  26  g4      0.1    0.2     0.3     0.5;
+  27   
+  28   
+  29  positive variable
+  30  x(methods) "how many units of germanium tp be melted by different methods",
+  31  y(refire_grades) 'how many units of melted germanium in different grades are chosen to be refired';
+  32   
+  33  free variable
+  34  processing_cost;
+  35   
+  36  parameters
+  37  melt_cost(methods) /m1 50,m2 70/;
+  38   
+  39  equations
+  40  cost,
+  41  germanium_limit,
+  42  refire_up(refire_grades),
+  43  g4_demands,
+  44  g3_demands,
+  45  g2_demands,
+  46  g1_demands;
+  47   
+  48  cost..
+  49  processing_cost =e= sum(methods, melt_cost(methods)*x(methods)) + sum(refire_grades, y(refire_grades))*25;
+  50   
+  51  germanium_limit..
+  52  sum(methods,x(methods)) =l= 20000;
+  53   
+  54  refire_up(refire_grades)..
+  55  y(refire_grades) =l= sum(methods,q(refire_grades,methods)*x(methods));
+  56   
+  57  g4_demands..
+  58  sum(methods,q('g4',methods)*x(methods)) + sum(refire_grades, refire('g4',refire_grades)*y(refire_grades)) =g= 1000;
+  59   
+  60  g3_demands..
+  61  sum(methods,q('g3',methods)*x(methods)) - y('g3') + sum(refire_grades, refire('g3',refire_grades)*y(refire_grades)) =g= 2000;
+  62   
+  63  g2_demands..
+  64  sum(methods,q('g2',methods)*x(methods)) - y('g2') + sum(refire_grades, refire('g2',refire_grades)*y(refire_grades)) =g= 3000;
+  65   
+  66  g1_demands..
+  67  sum(methods,q('g1',methods)*x(methods))- y('g1') + sum(refire_grades, refire('g1',refire_grades)*y(refire_grades)) =g= 3000;
+  68   
+  69  model transistors /all/;
+  70  solve transistors using lp minimizing processing_cost;
+  71  scalar sstat, mstat;
+  72  sstat = transistors.solvestat;
+  73  mstat = transistors.modelstat;
+  74   
+  75  display sstat,mstat,x.l,processing_cost.l;
+
+
+COMPILATION TIME     =        0.004 SECONDS      3 MB  32.2.0 rc62c018 DEX-DEG
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/24/20 23:39:36 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE transistors Using LP From line 70
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           7     SINGLE EQUATIONS           10
+BLOCKS OF VARIABLES           3     SINGLE VARIABLES            7
+NON ZERO ELEMENTS            42
+
+
+GENERATION TIME      =        0.016 SECONDS      4 MB  32.2.0 rc62c018 DEX-DEG
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/24/20 23:39:36 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE transistors Using LP From line 70
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   transistors         OBJECTIVE  processing_cost
+     TYPE    LP                  DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  70
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE           641725.3521
+
+ RESOURCE USAGE, LIMIT          0.115 10000000000.000
+ ITERATION COUNT, LIMIT         3    2147483647
+
+IBM ILOG CPLEX   32.2.0 rc62c018 Released Aug 26, 2020 DEG x86 64bit/Mac OS X 
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+Cplex 12.10.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.06sec (det. 0.02 ticks)
+Optimal solution found.
+Objective :      641725.352113
+
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/24/20 23:39:36 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     75 PARAMETER sstat                =        1.000  
+            PARAMETER mstat                =        1.000  
+
+----     75 VARIABLE x.L  how many units of germanium tp be melted by different methods
+
+m1 10563.380
+
+
+----     75 VARIABLE processing_cost.L     =   641725.352  
+
+
+EXECUTION TIME       =        0.172 SECONDS      4 MB  32.2.0 rc62c018 DEX-DEG
+
+
+USER: Introduction to Optimization (CS/ISyE/ECE 524) S200826/0001AB-GEN
+      University of Wisconsin-Madison, Computer Sciences Dept.   DCE850
+      License for teaching and research at degree granting institutions
+
+
+**** FILE SUMMARY
+
+Input      /Users/greta/Documents/ECE524/524HW2/HW2-2.gms
+Output     /Users/greta/Documents/ECE524/524HW2/HW2-2.lst

@@ -1,0 +1,386 @@
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/25/20 21:45:25 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1  option limrow = 0, limcol = 0 ;
+   2  option solprint = off;
+   3   
+   4   
+   5   
+      After experiment with different NUM_WANDS 500,1000,1500,2000,2500,300,3500,5000, I find that the total galleons
+      produced increase at first and then decrease. Also I try different solvers when NUM_WANDS=1000.
+                  PARAMETER LP_time              =        0.086  
+                  PARAMETER CPLEX_time           =        0.020  
+                  PARAMETER BARON_time           =        0.200  
+                  PARAMETER BDMLP_time           =        0.088  
+                  PARAMETER IPOPT_time           =        0.438
+      Different solvers need different time to solve this problem but they end up in the same solution.
+       
+  17   
+  21  sets
+  22      W Wands /wand1*wand1000/
+  23      C Components /component1*component100/
+  24  ;
+  25   
+  26  parameters
+  27      b(C) Number of components on hand
+  28      g(W) Galleons per wand
+  29      a(C,W)  Number of c requried to make w
+  30      u(W)    Max number of wands to make
+  31      ell(W)    Min number of wans to make
+  32  ;
+  33   
+  34  scalars
+  35    alpha / 0.05 /
+  36  ;
+  37   
+  38  b(C) = round(uniform(5000,10000)) ;
+  39  g(W) = uniform(5,30) ;
+  40  a(C,W) = 1$(uniform(0,1) < alpha) + 1$(uniform(0,1) < alpha) ;
+  41  ell(W) = round(uniform(5,20)) ;
+  42  u(W) = round(uniform(50,100)) ;
+  43   
+  44  positive variables
+  45  x(W);
+  46   
+  47  free variable
+  48  obj;
+  49   
+  50  equations
+  51  galleons,
+  52  res_constraints(C);
+  53   
+  54  galleons..
+  55  obj =e= sum(W,x(W)*g(W));
+  56   
+  57  res_constraints(C)..
+  58  sum(W,a(C,W)*x(W)) =l= b(C);
+  59   
+  60  x.up(W) = u(W);
+  61  x.lo(W) = ell(W);
+  62   
+  63  model pro /all/;
+  64  solve pro using lp maximizing obj;
+  65   
+  66  scalar sstat, mstat,LP_time;
+  67  sstat = pro.solvestat;
+  68  mstat = pro.modelstat;
+  69  LP_time=pro.resusd;
+  70  display sstat,mstat,x.l,obj.l;
+  71   
+  72  scalar CPLEX_time;
+  73  option lp=CPLEX;
+  74  solve pro using lp maximizing obj;
+  75  CPLEX_time=pro.resusd;
+  76   
+  77  scalar BARON_time;
+  78  option lp=BARON;
+  79  solve pro using lp maximizing obj;
+  80  BARON_time=pro.resusd;
+  81   
+  82  scalar BDMLP_time;
+  83  option lp=BDMLP;
+  84  solve pro using lp maximizing obj;
+  85  BDMLP_time=pro.resusd;
+  86   
+  87  scalar IPOPT_time;
+  88  option lp=IPOPT;
+  89  solve pro using lp maximizing obj;
+  90  IPOPT_time=pro.resusd;
+  91   
+  92  display LP_time,CPLEX_time,BARON_time,BDMLP_time,IPOPT_time;
+
+
+COMPILATION TIME     =        0.001 SECONDS      3 MB  32.2.0 rc62c018 DEX-DEG
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/25/20 21:45:25 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE pro Using LP From line 64
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS          101
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES        1,001  1,000 projected
+NON ZERO ELEMENTS        10,720
+
+
+GENERATION TIME      =        0.016 SECONDS      5 MB  32.2.0 rc62c018 DEX-DEG
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/25/20 21:45:25 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE pro Using LP From line 64
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   pro                 OBJECTIVE  obj
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  64
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE          1154533.9992
+
+ RESOURCE USAGE, LIMIT          0.014 10000000000.000
+ ITERATION COUNT, LIMIT       111    2147483647
+
+IBM ILOG CPLEX   32.2.0 rc62c018 Released Aug 26, 2020 DEG x86 64bit/Mac OS X 
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+Cplex 12.10.0.0
+
+Space for names approximately 0.02 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.01sec (det. 4.81 ticks)
+Optimal solution found.
+Objective :     1154533.999164
+
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/25/20 21:45:25 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     70 PARAMETER sstat                =        1.000  
+            PARAMETER mstat                =        1.000  
+
+----     70 VARIABLE x.L  
+
+wand1     15.000,    wand2      6.000,    wand3     19.000,    wand4     70.000,    wand5     89.000,    wand6      8.000,    wand7     13.000,    wand8     44.699,    wand9     61.000,    wand10    72.000,    wand11    91.000,    wand12    76.000,    wand13    71.000,    wand14    69.000,    wand15    69.000,    wand16    71.000,    wand17     6.000,    wand18    59.000,    wand19    77.000,    wand20    13.000,    wand21    17.000,    wand22    64.000,    wand23    77.000,    wand24    69.000,    wand25    14.000,    wand26    95.000,    wand27    59.000,    wand28    88.000,    wand29    73.000,    wand30    81.000,    wand31    94.000,    wand32    72.000,    wand33    62.000,    wand34    94.000,    wand35    70.000,    wand36    79.000,    wand37    57.000,    wand38    15.000,    wand39    54.000,    wand40     9.000,    wand41    63.000,    wand42    14.856,    wand43    57.000,    wand44    96.000,    wand45    59.000,    wand46    57.000,    wand47    12.000,    wand48    17.000,    wand49    54.000,    wand50    14.000,    wand51    77.000,    wand52     9.000,    wand53    10.000,    wand54    72.000,    wand55    58.000,    wand56    93.000,    wand57    72.000,    wand58    15.000,    wand59     8.000,    wand60    51.000,    wand61    74.000,    wand62    66.000,    wand63    80.000,    wand64    16.000,    wand65    75.000,    wand66    16.000,    wand67    96.000,    wand68     9.000,    wand69    65.000,    wand70    13.000,    wand71    88.000,    wand72    93.000,    wand73    71.000,    wand74    74.000,    wand75    11.000,    wand76    68.000,    wand77    73.000,    wand78    78.000,    wand79    62.000,    wand80    65.457,    wand81    81.000,    wand82    67.000,    wand83    85.000,    wand84     5.000,    wand85    76.000,    wand86    84.000,    wand87    18.000,    wand88    86.000,    wand89    50.000,    wand90    88.000,    wand91    51.000,    wand92    65.000,    wand93    68.000,    wand94    11.000,    wand95    91.000,    wand96    83.000,    wand97    56.000,    wand98    90.000,    wand99    62.000,    wand100   84.000,    wand101   76.000,    wand102   80.000,    wand103   85.000,    wand104   70.000,    wand105   64.000,    wand106   20.000,    wand107   53.000,    wand108   99.000,    wand109   56.000,    wand110   60.000,    wand111   51.000,    wand112   76.000,    wand113   94.000,    wand114   77.126,    wand115   78.000,    wand116   92.000,    wand117    8.000,    wand118   15.000,    wand119   65.000,    wand120   80.000,    wand121   81.000,    wand122   67.000,    wand123    9.000,    wand124   75.000,    wand125   81.000,    wand126   81.000,    wand127   19.000
+wand128   84.000,    wand129   68.000,    wand130   84.000,    wand131   59.000,    wand132   66.000,    wand133   15.000,    wand134   98.000,    wand135   92.000,    wand136   95.000,    wand137   96.000,    wand138   57.000,    wand139   65.000,    wand140   56.000,    wand141   86.000,    wand142   92.000,    wand143   18.000,    wand144   73.000,    wand145   13.000,    wand146   98.000,    wand147   98.000,    wand148   13.000,    wand149   60.000,    wand150   62.000,    wand151   53.000,    wand152   64.000,    wand153    6.000,    wand154   20.000,    wand155   76.000,    wand156   92.000,    wand157   90.000,    wand158    7.000,    wand159   93.000,    wand160    5.000,    wand161    6.000,    wand162   78.000,    wand163   39.666,    wand164   70.000,    wand165   97.000,    wand166   79.000,    wand167   81.543,    wand168   77.000,    wand169   16.000,    wand170   54.000,    wand171    6.000,    wand172   19.000,    wand173   86.000,    wand174   49.595,    wand175   80.000,    wand176   92.000,    wand177   65.000,    wand178   69.000,    wand179   58.000,    wand180   84.000,    wand181   90.000,    wand182   96.000,    wand183   19.000,    wand184    6.000,    wand185   72.000,    wand186   75.000,    wand187   16.000,    wand188   86.000,    wand189   63.000,    wand190   16.000,    wand191   62.000,    wand192   55.000,    wand193   79.000,    wand194   17.000,    wand195   83.000,    wand196   64.000,    wand197   92.000,    wand198   91.000,    wand199   91.000,    wand200    7.000,    wand201   59.000,    wand202   87.000,    wand203   78.000,    wand204   66.000,    wand205   74.000,    wand206   96.000,    wand207   62.000,    wand208   57.000,    wand209   19.000,    wand210    8.000,    wand211   68.000,    wand212    8.000,    wand213   16.000,    wand214   79.000,    wand215   83.000,    wand216   91.000,    wand217   78.000,    wand218   61.000,    wand219    7.000,    wand220   73.000,    wand221  100.000,    wand222  100.000,    wand223   81.000,    wand224   20.000,    wand225    8.000,    wand226   61.000,    wand227   52.000,    wand228   94.000,    wand229   88.000,    wand230   57.000,    wand231   15.000,    wand232   68.000,    wand233   71.000,    wand234   78.000,    wand235   74.000,    wand236   78.000,    wand237   93.000,    wand238   18.000,    wand239   53.000,    wand240   19.000,    wand241  100.000,    wand242   98.000,    wand243   13.000,    wand244    7.000,    wand245   79.000,    wand246   76.000,    wand247   72.000,    wand248   53.000,    wand249   73.000,    wand250   94.000,    wand251   71.000,    wand252   10.000,    wand253   18.000,    wand254   65.000
+wand255   90.000,    wand256   73.000,    wand257   59.000,    wand258   90.000,    wand259   64.000,    wand260    6.000,    wand261   80.000,    wand262    7.000,    wand263   98.000,    wand264   87.000,    wand265   97.000,    wand266   60.000,    wand267   12.000,    wand268   98.000,    wand269   19.000,    wand270   12.000,    wand271   83.000,    wand272   24.478,    wand273   81.000,    wand274   19.350,    wand275   18.000,    wand276   50.000,    wand277   87.000,    wand278   76.000,    wand279   61.000,    wand280   86.000,    wand281   78.000,    wand282   88.000,    wand283   29.276,    wand284   97.000,    wand285   66.000,    wand286   51.000,    wand287   59.000,    wand288    5.000,    wand289   50.000,    wand290   19.000,    wand291   16.000,    wand292   97.000,    wand293   51.000,    wand294   97.000,    wand295   58.000,    wand296   52.000,    wand297   80.000,    wand298   84.000,    wand299   79.000,    wand300  100.000,    wand301   88.000,    wand302   61.000,    wand303   11.000,    wand304   62.000,    wand305   82.000,    wand306   59.000,    wand307   63.000,    wand308   92.000,    wand309   61.000,    wand310   82.000,    wand311   60.000,    wand312   74.000,    wand313   13.000,    wand314   54.000,    wand315   83.000,    wand316   80.000,    wand317   51.000,    wand318   61.000,    wand319   18.000,    wand320   17.000,    wand321   66.000,    wand322   79.000,    wand323   82.000,    wand324   89.000,    wand325   88.000,    wand326   61.000,    wand327   71.000,    wand328   61.000,    wand329   62.000,    wand330   62.000,    wand331   79.000,    wand332   61.000,    wand333   12.000,    wand334   58.000,    wand335   63.000,    wand336   85.000,    wand337   67.000,    wand338   60.000,    wand339   93.000,    wand340   50.000,    wand341   10.000,    wand342   86.000,    wand343    5.000,    wand344   60.000,    wand345   16.000,    wand346   78.000,    wand347   67.000,    wand348   89.000,    wand349   99.000,    wand350   72.000,    wand351   55.000,    wand352   70.000,    wand353   18.000,    wand354   81.000,    wand355   71.000,    wand356   88.000,    wand357   11.000,    wand358   67.938,    wand359   56.000,    wand360   68.000,    wand361   96.000,    wand362   66.000,    wand363   69.000,    wand364   20.000,    wand365   57.000,    wand366   59.000,    wand367    7.000,    wand368   10.000,    wand369   57.000,    wand370   14.000,    wand371   91.000,    wand372   71.000,    wand373   85.000,    wand374   59.000,    wand375   51.000,    wand376   12.000,    wand377   84.000,    wand378   14.000,    wand379   50.000,    wand380  100.000,    wand381   18.000
+wand382   54.000,    wand383   56.000,    wand384   64.000,    wand385   12.000,    wand386   97.000,    wand387   73.000,    wand388   93.000,    wand389   75.000,    wand390   27.466,    wand391   53.000,    wand392   58.000,    wand393   97.000,    wand394   10.000,    wand395   89.000,    wand396   79.000,    wand397   77.000,    wand398   52.000,    wand399    6.000,    wand400   90.000,    wand401   95.000,    wand402   86.000,    wand403   14.000,    wand404   88.000,    wand405   61.000,    wand406   67.000,    wand407   47.470,    wand408   98.000,    wand409   99.000,    wand410   82.000,    wand411   91.000,    wand412   62.000,    wand413   91.000,    wand414   79.000,    wand415   17.000,    wand416   87.000,    wand417   50.000,    wand418   84.000,    wand419   87.000,    wand420   19.000,    wand421   63.000,    wand422   86.000,    wand423   19.000,    wand424   76.000,    wand425   50.000,    wand426   71.000,    wand427   99.000,    wand428   67.000,    wand429   10.000,    wand430   19.000,    wand431   92.000,    wand432    6.000,    wand433  100.000,    wand434   83.000,    wand435   97.000,    wand436   99.000,    wand437   88.000,    wand438   77.000,    wand439   18.000,    wand440   59.000,    wand441    7.000,    wand442   85.000,    wand443   13.000,    wand444   96.000,    wand445   19.000,    wand446   85.000,    wand447   63.000,    wand448   18.000,    wand449   78.504,    wand450   20.444,    wand451   72.000,    wand452   68.000,    wand453   81.000,    wand454   71.000,    wand455   19.000,    wand456   63.000,    wand457   95.000,    wand458   51.306,    wand459   53.000,    wand460   52.000,    wand461   66.000,    wand462   79.000,    wand463   65.000,    wand464   54.000,    wand465   81.000,    wand466   81.000,    wand467   88.000,    wand468    9.000,    wand469   15.000,    wand470   64.000,    wand471   82.000,    wand472   83.000,    wand473   91.000,    wand474   67.000,    wand475   55.000,    wand476   98.000,    wand477    8.000,    wand478   77.000,    wand479   23.810,    wand480   15.000,    wand481    9.000,    wand482   87.000,    wand483   15.000,    wand484   82.000,    wand485   61.000,    wand486   85.000,    wand487   57.000,    wand488   75.000,    wand489   65.000,    wand490   61.000,    wand491   74.000,    wand492   13.000,    wand493   89.000,    wand494   55.000,    wand495   12.000,    wand496   67.000,    wand497   93.000,    wand498   70.000,    wand499   55.000,    wand500   14.000,    wand501   66.000,    wand502   76.000,    wand503   80.000,    wand504   97.000,    wand505   83.000,    wand506   62.000,    wand507   55.000,    wand508   96.000
+wand509   69.000,    wand510   18.000,    wand511   63.000,    wand512   75.000,    wand513   11.000,    wand514   86.000,    wand515   75.000,    wand516   86.000,    wand517   88.000,    wand518   94.000,    wand519   54.000,    wand520   17.000,    wand521   94.000,    wand522   57.000,    wand523   61.000,    wand524   54.000,    wand525   97.000,    wand526   56.000,    wand527  100.000,    wand528   18.000,    wand529   85.000,    wand530   19.000,    wand531   72.000,    wand532   19.000,    wand533   83.000,    wand534   99.000,    wand535   14.000,    wand536   71.000,    wand537   16.000,    wand538   14.000,    wand539   56.000,    wand540   69.000,    wand541   18.000,    wand542    7.000,    wand543   88.000,    wand544   83.000,    wand545   86.000,    wand546   81.000,    wand547   78.000,    wand548   86.000,    wand549   67.000,    wand550   76.000,    wand551   19.000,    wand552   63.000,    wand553   14.000,    wand554    6.000,    wand555   75.000,    wand556   52.000,    wand557    9.000,    wand558   97.000,    wand559   56.000,    wand560   66.000,    wand561   41.289,    wand562   57.000,    wand563   76.000,    wand564   92.000,    wand565   61.000,    wand566   61.000,    wand567   87.000,    wand568   81.000,    wand569   74.000,    wand570   90.952,    wand571   44.353,    wand572   53.000,    wand573   87.000,    wand574   79.000,    wand575   84.000,    wand576   78.000,    wand577   62.000,    wand578   90.000,    wand579   96.000,    wand580   71.000,    wand581   71.000,    wand582   67.000,    wand583   19.000,    wand584   60.000,    wand585   84.000,    wand586   14.000,    wand587   63.000,    wand588   96.000,    wand589   52.000,    wand590   68.000,    wand591   90.000,    wand592   63.000,    wand593   15.000,    wand594   98.000,    wand595   59.000,    wand596   11.000,    wand597   82.000,    wand598   19.000,    wand599   13.000,    wand600   67.000,    wand601   14.000,    wand602   72.000,    wand603   58.000,    wand604   76.000,    wand605   85.000,    wand606   83.000,    wand607   68.000,    wand608   75.000,    wand609   55.000,    wand610   13.000,    wand611   55.000,    wand612   87.000,    wand613   98.000,    wand614   78.000,    wand615   81.000,    wand616    8.000,    wand617   84.000,    wand618   58.000,    wand619   59.000,    wand620   61.000,    wand621   64.000,    wand622   66.000,    wand623   51.000,    wand624   69.000,    wand625   87.000,    wand626   56.000,    wand627   79.000,    wand628   91.000,    wand629   91.000,    wand630   50.000,    wand631   59.000,    wand632   57.000,    wand633   64.000,    wand634   54.000,    wand635   55.000
+wand636   56.000,    wand637   51.000,    wand638   70.000,    wand639   98.000,    wand640   69.000,    wand641   16.000,    wand642   10.000,    wand643   18.000,    wand644    5.000,    wand645    8.000,    wand646   69.000,    wand647    7.000,    wand648   87.000,    wand649   52.000,    wand650   96.000,    wand651    7.000,    wand652   86.000,    wand653   95.000,    wand654   14.000,    wand655   68.000,    wand656   55.000,    wand657   75.000,    wand658   92.000,    wand659   66.000,    wand660   66.000,    wand661   65.000,    wand662   91.000,    wand663   62.000,    wand664   65.000,    wand665   75.000,    wand666   84.000,    wand667   66.000,    wand668   81.000,    wand669   13.000,    wand670   71.000,    wand671   84.000,    wand672   83.000,    wand673   96.000,    wand674   63.000,    wand675   60.000,    wand676   96.000,    wand677   77.000,    wand678   20.000,    wand679   99.000,    wand680   89.000,    wand681   96.000,    wand682   66.000,    wand683   19.000,    wand684   11.000,    wand685   68.000,    wand686   15.000,    wand687   89.000,    wand688    8.000,    wand689   75.000,    wand690   62.000,    wand691   63.000,    wand692   60.000,    wand693   88.000,    wand694   93.000,    wand695   68.000,    wand696   55.000,    wand697   98.000,    wand698   70.000,    wand699   91.000,    wand700   53.000,    wand701   16.000,    wand702   65.000,    wand703   80.000,    wand704   85.000,    wand705   63.000,    wand706   64.000,    wand707   91.000,    wand708   11.000,    wand709   85.000,    wand710   57.000,    wand711   68.000,    wand712   75.000,    wand713   16.000,    wand714   17.000,    wand715   92.000,    wand716   14.000,    wand717   82.000,    wand718    8.000,    wand719   51.000,    wand720   12.000,    wand721    8.000,    wand722   60.000,    wand723   80.000,    wand724   98.000,    wand725   73.000,    wand726   65.000,    wand727   53.095,    wand728   24.175,    wand729   83.000,    wand730   89.000,    wand731   95.000,    wand732   15.000,    wand733   59.000,    wand734   61.000,    wand735   87.000,    wand736   50.000,    wand737   63.000,    wand738    7.000,    wand739   74.000,    wand740   74.000,    wand741   76.000,    wand742   73.000,    wand743   52.000,    wand744   95.000,    wand745   54.000,    wand746   15.000,    wand747   57.000,    wand748   58.000,    wand749   77.000,    wand750   12.000,    wand751   59.000,    wand752   81.000,    wand753   74.000,    wand754   49.977,    wand755   93.000,    wand756   34.405,    wand757   68.000,    wand758   77.000,    wand759   66.000,    wand760   50.000,    wand761   66.000,    wand762    8.000
+wand763   76.000,    wand764   91.000,    wand765   76.000,    wand766   66.000,    wand767   87.000,    wand768   80.000,    wand769   59.000,    wand770   56.000,    wand771   53.000,    wand772   80.000,    wand773   19.000,    wand774    7.000,    wand775   96.000,    wand776   13.000,    wand777   95.365,    wand778   70.000,    wand779   60.000,    wand780    6.000,    wand781   96.000,    wand782   53.000,    wand783   69.000,    wand784   63.000,    wand785   98.000,    wand786   92.000,    wand787   61.000,    wand788   94.000,    wand789   81.000,    wand790   18.000,    wand791   88.000,    wand792   99.000,    wand793   83.000,    wand794   19.000,    wand795   41.830,    wand796    9.000,    wand797   94.000,    wand798   52.000,    wand799   15.000,    wand800   14.000,    wand801   63.000,    wand802   50.000,    wand803   55.000,    wand804   84.000,    wand805   97.000,    wand806   57.000,    wand807   67.000,    wand808   85.000,    wand809   58.000,    wand810   91.000,    wand811    7.000,    wand812   16.000,    wand813   83.000,    wand814   77.000,    wand815   10.000,    wand816   89.000,    wand817   79.448,    wand818   81.000,    wand819   65.000,    wand820   72.000,    wand821   79.000,    wand822  100.000,    wand823   97.000,    wand824   73.000,    wand825   95.000,    wand826   56.000,    wand827   53.000,    wand828   17.000,    wand829   59.000,    wand830   52.000,    wand831   64.000,    wand832   89.000,    wand833   63.000,    wand834   52.000,    wand835   53.000,    wand836   89.000,    wand837   94.000,    wand838   18.213,    wand839   89.000,    wand840   20.000,    wand841    9.000,    wand842    8.000,    wand843   76.000,    wand844   54.000,    wand845   87.000,    wand846   88.000,    wand847    7.000,    wand848    9.000,    wand849   60.000,    wand850   96.698,    wand851   54.000,    wand852    8.000,    wand853    9.000,    wand854   95.000,    wand855   94.000,    wand856    8.000,    wand857   10.000,    wand858   56.000,    wand859   12.000,    wand860   12.000,    wand861   53.000,    wand862   84.000,    wand863   59.000,    wand864   95.000,    wand865   95.000,    wand866   95.000,    wand867   10.000,    wand868   96.000,    wand869   56.000,    wand870   57.000,    wand871   15.000,    wand872   89.000,    wand873    9.000,    wand874   68.000,    wand875   16.000,    wand876   11.000,    wand877   73.000,    wand878   53.000,    wand879   86.000,    wand880   66.000,    wand881    7.000,    wand882   99.000,    wand883   99.000,    wand884   57.000,    wand885   54.000,    wand886   83.000,    wand887   76.000,    wand888   63.000,    wand889   96.000
+wand890   69.000,    wand891   92.000,    wand892   87.000,    wand893   71.000,    wand894   54.000,    wand895   68.000,    wand896   59.000,    wand897   82.000,    wand898   97.000,    wand899   71.000,    wand900   59.000,    wand901   76.000,    wand902   94.000,    wand903   87.000,    wand904   79.000,    wand905   82.000,    wand906   77.000,    wand907   58.000,    wand908   75.000,    wand909   65.000,    wand910    9.000,    wand911   61.000,    wand912   66.000,    wand913   61.000,    wand914   61.000,    wand915   62.000,    wand916   93.000,    wand917   94.000,    wand918   80.000,    wand919   59.000,    wand920   54.000,    wand921   61.000,    wand922   86.000,    wand923   62.000,    wand924   16.000,    wand925    8.000,    wand926   98.000,    wand927   75.000,    wand928   62.000,    wand929   58.000,    wand930   77.000,    wand931   66.000,    wand932   54.000,    wand933   13.000,    wand934   88.000,    wand935   86.000,    wand936   60.000,    wand937   11.000,    wand938   74.000,    wand939   78.000,    wand940   59.000,    wand941   12.000,    wand942   79.000,    wand943   87.000,    wand944   90.000,    wand945   84.000,    wand946   51.000,    wand947   15.000,    wand948   88.000,    wand949   95.000,    wand950   73.000,    wand951   64.000,    wand952   87.000,    wand953   48.982,    wand954   74.000,    wand955   54.000,    wand956   69.000,    wand957   74.000,    wand958   98.000,    wand959   80.000,    wand960   64.000,    wand961    9.000,    wand962   78.000,    wand963   77.000,    wand964   62.000,    wand965   91.000,    wand966   93.000,    wand967   62.000,    wand968   92.000,    wand969   95.000,    wand970   59.000,    wand971   13.000,    wand972   61.000,    wand973    5.000,    wand974   88.000,    wand975   75.000,    wand976   88.000,    wand977   10.000,    wand978   72.000,    wand979   74.000,    wand980   98.000,    wand981   14.000,    wand982   65.000,    wand983   86.000,    wand984   84.000,    wand985   65.000,    wand986   16.000,    wand987   16.000,    wand988   53.000,    wand989   65.000,    wand990   68.000,    wand991   54.000,    wand992   68.000,    wand993   65.382,    wand994   53.000,    wand995    7.000,    wand996   83.000,    wand997   14.000,    wand998   71.000,    wand999   20.000,    wand1000  73.000
+
+
+----     70 VARIABLE obj.L                 =  1154533.999  
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/25/20 21:45:25 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE pro Using LP From line 74
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS          101
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES        1,001
+NON ZERO ELEMENTS        10,720
+
+
+GENERATION TIME      =        0.007 SECONDS      5 MB  32.2.0 rc62c018 DEX-DEG
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/25/20 21:45:25 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE pro Using LP From line 74
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   pro                 OBJECTIVE  obj
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  CPLEX               FROM LINE  74
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE          1154533.9992
+
+ RESOURCE USAGE, LIMIT          0.012 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+
+IBM ILOG CPLEX   32.2.0 rc62c018 Released Aug 26, 2020 DEG x86 64bit/Mac OS X 
+--- GAMS/Cplex Link licensed for continuous and discrete problems.
+Cplex 12.10.0.0
+
+Space for names approximately 0.02 Mb
+Use option 'names no' to turn use of names off
+LP status(1): optimal
+Cplex Time: 0.00sec (det. 1.87 ticks)
+Optimal solution found.
+Objective :     1154533.999164
+
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/25/20 21:45:25 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE pro Using LP From line 79
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS          101
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES        1,001
+NON ZERO ELEMENTS        10,720
+
+
+GENERATION TIME      =        0.007 SECONDS      5 MB  32.2.0 rc62c018 DEX-DEG
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/25/20 21:45:25 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE pro Using LP From line 79
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   pro                 OBJECTIVE  obj
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  BARON               FROM LINE  79
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE          1154533.9992
+
+ RESOURCE USAGE, LIMIT          0.070 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+
+GAMS/BARON       32.2.0 rc62c018 Released Aug 26, 2020 DEG x86 64bit/Mac OS X 
+
+BARON is a product of The Optimization Firm, LLC. http://www.minlp.com/
+Parts of the BARON software were created at the
+University of Illinois at Urbana-Champaign.
+
+
+===========================================================================
+ BARON version 20.4.14. Built: OSX-64 Tue Apr 14 21:11:20 EDT 2020
+
+ BARON is a product of The Optimization Firm.
+ For information on BARON, see https://minlp.com/about-baron
+
+ If you use this software, please cite publications from
+ https://minlp.com/baron-publications, such as: 
+
+ Khajavirad, A. and N. V. Sahinidis,
+ A hybrid LP/NLP paradigm for global optimization relaxations,
+ Mathematical Programming Computation, 10, 383-421, 2018.
+===========================================================================
+ This BARON run may utilize the following subsolver(s)
+ For LP/MIP/QP: ILOG CPLEX                                      
+ For NLP: MINOS, SNOPT, GAMS external NLP, IPOPT, FILTERSD, FILTERSQP
+
+Solution      = 1154533.99916449  best solution found during preprocessing
+Best possible = 1154533.99916449
+Absolute gap  = 0  optca = 1E-9
+Relative gap  = 0  optcr = 0.0001
+  (Note that BARON uses a different formula to compute the relative gap as
+   was used for the above reported value.)
+
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                             5  PROJECTED
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/25/20 21:45:25 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE pro Using LP From line 84
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS          101
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES        1,001
+NON ZERO ELEMENTS        10,720
+
+
+GENERATION TIME      =        0.006 SECONDS      5 MB  32.2.0 rc62c018 DEX-DEG
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/25/20 21:45:25 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE pro Using LP From line 84
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   pro                 OBJECTIVE  obj
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  BDMLP               FROM LINE  84
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE          1154533.9992
+
+ RESOURCE USAGE, LIMIT          0.075 10000000000.000
+ ITERATION COUNT, LIMIT         0    2147483647
+
+ BDMLP 1.3        32.2.0 rc62c018 Released Aug 26, 2020 DEG x86 64bit/Mac OS
+
+ Originally developed by
+  A. Brooke, A. Drud, and A. Meeraus,
+  World Bank, Washington, D.C., U.S.A.
+ MIP part added by
+  A. Drud, ARKI Consult, Denmark
+  M. Bussieck, GAMS Dev. Corp. U.S.A.
+ Work space requested by solver --    0.23 Mb
+ EXIT -- OPTIMAL SOLUTION FOUND.
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/25/20 21:45:25 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE pro Using LP From line 89
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS          101
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES        1,001
+NON ZERO ELEMENTS        10,720
+
+
+GENERATION TIME      =        0.008 SECONDS      5 MB  32.2.0 rc62c018 DEX-DEG
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/25/20 21:45:25 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE pro Using LP From line 89
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   pro                 OBJECTIVE  obj
+     TYPE    LP                  DIRECTION  MAXIMIZE
+     SOLVER  IPOPT               FROM LINE  89
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE          1154533.9992
+
+ RESOURCE USAGE, LIMIT          0.399 10000000000.000
+ ITERATION COUNT, LIMIT        15    2147483647
+
+COIN-OR Ipopt    32.2.0 rc62c018 Released Aug 26, 2020 DEG x86 64bit/Mac OS X 
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+                            31  PROJECTED
+GAMS 32.2.0  rc62c018 Released Aug 26, 2020 DEX-DEG x86 64bit/Mac OS X - 09/25/20 21:45:25 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----     92 PARAMETER LP_time              =        0.014  
+            PARAMETER CPLEX_time           =        0.012  
+            PARAMETER BARON_time           =        0.070  
+            PARAMETER BDMLP_time           =        0.075  
+            PARAMETER IPOPT_time           =        0.399  
+
+
+EXECUTION TIME       =        0.862 SECONDS      5 MB  32.2.0 rc62c018 DEX-DEG
+
+
+USER: Introduction to Optimization (CS/ISyE/ECE 524) S200826/0001AB-GEN
+      University of Wisconsin-Madison, Computer Sciences Dept.   DCE850
+      License for teaching and research at degree granting institutions
+
+
+**** FILE SUMMARY
+
+Input      /Users/greta/Documents/ECE524/524HW2/HW2-3-2.gms
+Output     /Users/greta/Documents/ECE524/524HW2/HW2-3-2.lst
